@@ -1,7 +1,7 @@
 # Sentiment analisys fro user.info.message.table
 #  https://www.repustate.com/api-demo/
 #
-# ---- open session on kuban forum to RSelenium ------- r::harbor!!!
+# ---- befor run programm open session on kuban forum to RSelenium ------- r::harbor!!!
 # Run a server using Docker
 # docker run -d -p 4445:4444 selenium/standalone-firefox
 # -------------------------------------------------------
