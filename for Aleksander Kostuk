@@ -1,0 +1,28 @@
+# Sentiment analisys fro user.info.message.table
+#  https://www.repustate.com/api-demo/
+#
+# ---- open session on kuban forum to RSelenium ------- r::harbor!!!
+# Run a server using Docker
+# docker run -d -p 4445:4444 selenium/standalone-firefox
+# -------------------------------------------------------
+
+require(RSelenium)
+
+remDr <- remoteDriver(remoteServerAddr = "localhost" 
+                      , port = 4445L
+                      , browserName = "firefox"
+)
+remDr$open()
+
+remDr$navigate("https://www.repustate.com/api-demo/")
+remDr$getCurrentUrl()
+plot.new()
+remDr$screenshot(display = T)
+plot.new()
+# let`s select ru lang
+option <- remDr$findElement(using = 'xpath', "//*/option[@value = 'ru']")
+option$clickElement()
+remDr$screenshot(display = T)
+#---- close connection ----
+remDr$close()
+# ==============================================
