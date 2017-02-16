@@ -1,4 +1,4 @@
-# Sentiment analisys fro user.info.message.table
+# Sentiment analisys for user.info.message.table
 #  https://www.repustate.com/api-demo/
 #
 # ---- firs`t run docker image with RSelenium ------- r::harbor!!!
