@@ -1,12 +1,10 @@
 # Sentiment analisys for user.info.message.table
-#  https://www.repustate.com/api-demo/
+#  https://ru.investing.com
 #
 # ---- firs`t run docker image with RSelenium ------- r::harbor!!!
 # Run a server using Docker
 # docker run -d -p 4445:4444 selenium/standalone-firefox
 # -------------------------------------------------------
-
-# ru_invest rask
 
 rm(list = ls())
 library(RSelenium)
@@ -15,7 +13,6 @@ library(stringi)
 library(tidyr)
 library(dplyr)
 
-# before starting docer with RSelenium
 remDr <- remoteDriver(remoteServerAddr = "localhost" 
                       , port = 4445L
                       , browserName = "firefox"
