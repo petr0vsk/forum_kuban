@@ -6,23 +6,47 @@
 # docker run -d -p 4445:4444 selenium/standalone-firefox
 # -------------------------------------------------------
 
-require(RSelenium)
+# ru_invest rask
 
+rm(list = ls())
+library(RSelenium)
+library(rvest)
+library(stringi)
+library(tidyr)
+library(dplyr)
+
+# before starting docer with RSelenium
 remDr <- remoteDriver(remoteServerAddr = "localhost" 
                       , port = 4445L
                       , browserName = "firefox"
 )
 remDr$open()
+remDr$setImplicitWaitTimeout(milliseconds = 10000)
+remDr$setTimeout(type = "page load", milliseconds = 10000)
 
-remDr$navigate("https://www.repustate.com/api-demo/")
+
+remDr$navigate("https://ru.investing.com/commodities/%D0%9C%D0%B5%D1%82%D0%B0%D0%BB%D0%BB%D1%8B")
 remDr$getCurrentUrl()
-plot.new()
 remDr$screenshot(display = T)
 plot.new()
-# let`s select ru lang
-option <- remDr$findElement(using = 'xpath', "//*/option[@value = 'ru']")
-option$clickElement()
-remDr$screenshot(display = T)
-#---- close connection ----
+# get page source
+metall.page <-read_html(remDr$getPageSource()[[1]])
+#extratct table "Котировки фьючерсов (CFD) в режиме реального времени" and conver it to data frame
+futures.cfd.table <- metall.page %>% # ::rvest work with html_tables better than ::Rselenium
+    html_nodes(xpath = "//*/table[@id='cross_rate_1']")%>%
+    html_table(trim =T, fill=T, header = NA) %>%
+    as.data.frame()
+    
+    
+#extratct table "Котировки фьючерсов США" and conver it to data frame
+futures.usa.table <- metall.page %>% # ::rvest work with html_tables better than ::Rselenium
+    html_nodes(xpath = "//*/table[@id='BarchartDataTable']")%>%
+    html_table(trim =T, fill=T, header = NA) %>%
+    as.data.frame()
+
+View(futures.cfd.table)
+View(futures.usa.table)
+
+
 remDr$close()
-# ==============================================
+
