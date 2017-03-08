@@ -1,0 +1,142 @@
+# Sentiment analisys fro user.info.message.table
+#  https://www.repustate.com/api-demo/
+#
+# ---- open session on kuban forum to RSelenium ------- r::harbor!!!
+# Run a server using Docker
+# docker run -d -p 4445:4444 selenium/standalone-firefox
+# -------------------------------------------------------
+rm(list = ls())
+library(RSelenium)
+library(stringi)
+library(tidyr)
+library(dplyr)
+
+bad.words <- c("Language ru Sentiment" )
+user.info.message.table <- read.csv("/root/WorkR/user_info_message_table3.csv", stringsAsFactors = FALSE)
+sent.value.list <- list()
+#user.info.message.table_4 <-user.info.message.table[1:9, ]
+remDr <- remoteDriver(remoteServerAddr = "localhost" 
+                      , port = 4445L
+                      , browserName = "firefox"
+)
+remDr$open()
+remDr$setImplicitWaitTimeout(milliseconds = 10000)
+remDr$setTimeout(type = "page load", milliseconds = 10000)
+# - start loop here - - - - - - - -- - - 
+for (i in 1:length(user.info.message.table$message))
+#-#for ( i in 1:100)
+{
+# - go to demo page  
+remDr$navigate("https://www.repustate.com/api-demo/")
+Sys.sleep(1)
+# let`s select ru lang
+option <- remDr$findElement(using = 'xpath', "//*/option[@value = 'ru']")
+option$clickElement()
+Sys.sleep(1)
+textElem <- remDr$findElement(using = 'xpath', "//*/textarea[@id = 'id_text']")
+Sys.sleep(1)
+textElem$sendKeysToElement(list(user.info.message.table$message[i]))
+Sys.sleep(1)
+# find text area 
+buttonElem <- remDr$findElement(using = 'xpath', "//*/button[@class = 'btn btn--primary']")
+Sys.sleep(1)
+buttonElem$clickElement()
+Sys.sleep(1)
+# let`s grub result
+sentElem <- remDr$findElements(using = 'xpath', "//*/table[@class = 'table']")
+Sys.sleep(1)
+sent.value <- sapply(sentElem, function(x){x$getElementText()}) %>%
+              stri_replace_all_fixed(bad.words, '', vectorize_all=FALSE) %>%
+              stri_trim() %>%
+              as.numeric()
+sent.value.list <- c(sent.value.list, sent.value)
+# clear tectarea
+#plot.new()
+#remDr$screenshot(display = TRUE)
+textElem <- remDr$findElement(using = 'xpath', "//*/textarea[@id = 'id_text']")
+Sys.sleep(1)
+textElem$clearElement() 
+saveRDS(sent.value.list, file="/root/WorkR/sent_value_list.rds")
+print(i)
+print(sent.value.list[i])
+Sys.sleep(1)
+
+# -end loop - - - - -- - 
+#---- close connection ----
+}
+remDr$close()
+# ==============================================
+sent.value <- readRDS(file="/root/WorkR/sent_value_list.rds") %>%
+    unlist() %>%
+    as.numeric() %>%
+    round(digits=2)%>%
+    as.data.frame() %>%
+    setNames("sent")
+
+user.info.message.table.376 <- user.info.message.table[1:376, ] %>%
+    bind_cols(sent.value) %>%
+    select(number, timestamp, name, message, sent )
+
+write.csv(user.info.message.table.376, "/root/WorkR/user_info_message_table_376.csv")
+# ==============================================================================
+
+library(ggplot2)
+library(viridis)
+library(scales)
+library(gridExtra)
+library(lubridate)
+
+user.info.sent.message.table <- read.csv("/root/WorkR/user_info_message_table_376.csv")
+user.info.sent.message.table$timestamp <-as.Date(user.info.sent.message.table$timestamp, format="%Y-%m-%d %H:%M:%S") 
+user.info.sent.message.table$timestamp <-as.POSIXct.Date(user.info.sent.message.table$timestamp)
+user.info.sent.message.table$message <- vkR::clear_text(user.info.sent.message.table$message, patterns = list("[|]\\w+"))
+
+library(stringi)
+bad.words <- c("\n", "\t" )
+stri_replace_all_fixed(user.info.sent.message.table$message, bad.words, '', vectorize_all=FALSE)
+
+# plot sentiment with diskret by number
+plot.new()  ##aes(x = interaction(year,quarter),
+ggplot(user.info.sent.message.table, aes(x = number, y=sent)) + 
+    geom_bar(na.rm=TRUE, stat="identity", position="identity", colour="darkblue") +
+    stat_smooth(colour="green", na.rm=TRUE) +
+    ggtitle("Use theme(plot.title = element_text(hjust = 0.5)) to center") +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    ggtitle("График эмоций в сообщениях форума МТС") +
+    scale_x_discrete(limits=seq(0, length(user.info.sent.message.table$number), 50)) +
+    ylab("Значение эмоциональной оценка") +
+    xlab("Номер сообщения")
+# # plot sentiment with diskret by date time  
+#startTime <- as.Date("2013-06-07 04:00:00")
+#endTime   <- as.Date("2013-06-08 04:00:00")
+#startTime <- as.POSIXct.Date(startTime)
+#endTime   <- as.POSIXct.Date(endTime)
+#start.end <- c(startTime,endTime)
+
+plot.new()   #aes(x = interaction(year,quarter),
+ggplot(user.info.sent.message.table, aes(timestamp, sent)) + 
+    geom_bar(na.rm=TRUE, stat="identity", position="identity", colour="darkblue") +
+    stat_smooth(colour="green", na.rm=TRUE) +
+    scale_x_datetime(breaks=date_breaks("1 month"), labels=date_format("%m-%d")) +
+    ggtitle("Use theme(plot.title = element_text(hjust = 0.5)) to center") +
+    theme(plot.title = element_text(hjust = 0.5)) +
+    ggtitle("График эмоций в сообщениях форума МТС") +
+    ylab("Значение эмоциональной оценка") +
+    xlab("Номер сообщения")  
+
+
+
+
+# select max.sentiment message
+max.sentiment <- user.info.sent.message.table %>%
+                    arrange(desc(sent)) %>%
+                    filter(sent > 0.7)
+# select min.sentiment message
+min.sentiment <- user.info.sent.message.table %>%
+                    arrange(sent) %>%
+                    filter(sent < -0.5)
+    
+min.sentiment$message
+
+
+                                                       
