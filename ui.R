@@ -22,16 +22,39 @@ dashboardPage(
             tabItem(tabName = "mts",
 # ---------- Graphics ----------------------------------------
                     fluidRow(
-                        tabBox(
-                            title = "Graphics", width = 12,
-                            # The id lets us use input$tabset1 on the server to find the current tab
-                            id = "tabset1", height = "450px",
-                            tabPanel("Barplot", "First tab content",  plotOutput("barplot")),
-                            tabPanel("Clust",    "Tab content 2"),
-                            tabPanel("Wordcloud", "World cloud")
-                        )
-                        
-                    ),
+                                tabBox(width = 12,
+                                       # The id lets us use input$tabset1 on the server to find the current tab
+                                       id = "tabset1", height = "450px",
+                                           tabPanel("Most freq word",
+                                                              column(4,
+                                                                     sidebarPanel( width = 12,
+                                                                         sliderInput("freq.range", "Freq range:",
+                                                                                     min = 1, max = 50, value = 7)
+                                                                     )  
+                                                              ),
+                                                              
+                                                              column(8,
+                                                                     plotOutput("barplot")
+                                                              )
+                                           ),#tabPanel 
+                                       tabPanel("Sentiment",   
+                                                
+                                                column(4,
+                                                       sidebarPanel( width = 12,
+                                                                     sliderInput("sentiment.range", "Freq range:",
+                                                                                 min = 1, max = length(user.info.sent.message.table$number), value = length(user.info.sent.message.table$number))
+                                                       )  
+                                                ),
+                                                
+                                                column(8,
+                                                       plotOutput("sentimentplot")
+                                                )
+                                                
+                                                ),#tabPanel
+                                       tabPanel("Wordcloud", "World cloud")#tabPanel
+                                       
+                                )#tabBox 
+                    ), #fluidRow
                     
                     
   #-------- Select field`s ----------------------------------------------------------------------------------------------------                  
