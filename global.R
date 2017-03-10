@@ -39,16 +39,27 @@ saveRDS(ovid, file="ovid.rda")
 DTM <- DocumentTermMatrix(ovid)
 DTM.sparce <- removeSparseTerms(DTM, 0.95)
 saveRDS(DTM, file="DTM.rds")
-# terms by frequency
-#-#freq.dtm <- colSums(as.matrix(DTM))
-#-#freq.dtm.ord <- order(freq.dtm)
-#-#saveRDS(freq.dtm, file="/root/WorkR/freq_dtm.rds")
-#-#saveRDS(freq.dtm.ord, file="/root/WorkR/freq_dtm_ord.rds")
 #- - - - - 
-freq.dtm <- readRDS("/root/WorkR/freq_dtm.rds")
-freq.dtm.ord <- readRDS("/root/WorkR/freq_dtm_ord.rds")
-freq.dtm[tail(freq.dtm.ord, 100)]
-#word.frq <- data.frame(word=names(freq.dtm), freq=freq.dtm)
-#write.csv(word.frq, "/root/WorkR/word_frq.csv")
-word.frq <- read.csv("/root/WorkR/word_frq.csv")
+# read word freq file ----
+# -----------------
+word.frq <- read.csv("/root/WorkR/word_frq.csv") %>% 
+    arrange(desc(freq))
+
+# -------------------------------------
+# -------- sentiment analysis ---
+# --------------------------------------
+user.info.sent.message.table <- read.csv("/root/WorkR/user_info_message_table_376.csv")
+user.info.sent.message.table$timestamp <-as.Date(user.info.sent.message.table$timestamp, format="%Y-%m-%d %H:%M:%S") 
+user.info.sent.message.table$timestamp <-as.POSIXct.Date(user.info.sent.message.table$timestamp)
+user.info.sent.message.table$message <- vkR::clear_text(user.info.sent.message.table$message, patterns = list("[|]\\w+"))
+
+library(stringi)
+bad.words <- c("\n", "\t" )
+stri_replace_all_fixed(user.info.sent.message.table$message, bad.words, '', vectorize_all=FALSE)
+
+
+# before plot compute
+v.limits = seq(0, length(user.info.sent.message.table$number), 25)
+v.labels <- as.Date.character(user.info.sent.message.table$timestamp[v.limits])
+
 
