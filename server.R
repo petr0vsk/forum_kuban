@@ -21,10 +21,23 @@ output$mts.table = DT::renderDataTable({user.info.message.table[ ,input$show_fie
                                             
     )
 output$barplot<- renderPlot(
-     ggplot(subset(word.frq, freq>640), aes (word, freq))
-     + geom_bar(stat="identity")   
-     + theme(axis.text.x=element_text(angle=45, hjust=1))   
+    ggplot((word.frq %>% slice(1:input$freq.range)), aes (word, freq))+ 
+        geom_bar(stat="identity") + 
+        labs(title = "Highest frequency words", x = NULL, y = "Word frequency") +
+        coord_flip()
  )
-    
+# график сентимент-анализа по времени   
+output$sentimentplot <- renderPlot(
+    ggplot(  (user.info.sent.message.table %>% slice(1:input$sentiment.range))  , aes(x = number, y=sent)) + 
+        geom_bar(na.rm=TRUE, stat="identity", position="identity", colour="darkblue") +
+        stat_smooth(colour="green", na.rm=TRUE) +
+        ggtitle("Use theme(plot.title = element_text(hjust = 0.5)) to center") +
+        theme(plot.title = element_text(hjust = 0.5)) +
+        ggtitle("График эмоций в сообщениях форума МТС") +
+        scale_x_discrete(limits=v.limits) + 
+        #scale_x_continuous(breaks = v.limits, labels = v.labels) +
+        ylab("Значение эмоциональной оценки") +
+        xlab("Номер сообщения")
+)
   
 }) #=========================
